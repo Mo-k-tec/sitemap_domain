@@ -1,0 +1,6 @@
+name = Site map - domain
+description = Site map integrated with the domain module.
+package = Domain Access
+core = 7.x
+
+dependencies[] = domain

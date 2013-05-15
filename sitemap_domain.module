@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function sitemap_domain_menu() {
+  $item = array();
+
+  $item['sitemap'] = array(
+    'title' => 'Sitemap',
+    'page callback' => 'sitemap_domain_form',
+    'access arguments' => array('view sitemap'),
+  );
+
+  $item['admin/config/sitemap'] = array(
+    'title' => 'Sitemap settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sitemap_domain_settings'),
+    'access arguments' => array('administer sitemap'),
+  );
+
+  return $item;
+}
+
+/**
+ * Custom callback for the sitemap settings page.
+ */
+function sitemap_domain_settings($form_state) {
+  $domains = domain_domains();
+  $form = array();
+
+  foreach ($domains as $domain) {
+    $form[$domain['machine_name']] = array(
+      '#type' => 'fieldset',
+      '#title' => $domain['sitename'],
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#weight' => -2,
+    );
+
+    $form[$domain['machine_name']][$domain['machine_name'] . '_' . $domain['domain_id']] = array(
+      '#type' => 'checkboxes',
+      '#options' => menu_get_menus(),
+      '#title' => t("Which menu's would u like to show in the sitemap"),
+      '#default_value' => variable_get($domain['machine_name'] . '_' . $domain['domain_id'], array()),
+      '#group' => $domain['machine_name'],
+    );
+  }
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_permission().
+ */
+function sitemap_domain_permission() {
+  return array(
+    'view sitemap' => array(
+      'title' => t('view sitemap'),
+      'description' => t('view sitemap'),
+    ),
+    'administer sitemap' => array(
+      'title' => t('administer sitemap'),
+      'description' => t('administer sitemap'),
+    ),
+  );
+}
+
+/**
+ * Custom sitemap menu callback.
+ */
+function sitemap_domain_form() {
+  $active_domain = domain_get_domain();
+  $selected_menus = variable_get($active_domain['machine_name'] . '_' . $active_domain['domain_id'], array());
+  $output = '';
+
+  foreach ($selected_menus as $menu) {
+    $output .= drupal_render(menu_tree($menu));
+  }
+
+  return $output;
+}
